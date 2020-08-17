@@ -36,13 +36,26 @@ func setValue(field reflect.Value, value string) error {
 		case reflect.String:
 			field.SetString(value)
 		case reflect.Int:
-			val, err := strconv.ParseInt(value, 10, 0)
-			if err != nil {
-				return err
-			}
-			field.SetInt(val)
+			return setInt(field, value, 0)
+		case reflect.Int8:
+			return setInt(field, value, 8)
+		case reflect.Int16:
+			return setInt(field, value, 16)
+		case reflect.Int32:
+			return setInt(field, value, 32)
+		case reflect.Int64:
+			return setInt(field, value, 64)
 		default:
 			return fmt.Errorf("%s is not a supported type", kind)
 	}
+	return nil
+}
+
+func setInt(field reflect.Value, value string, bitSize int) error {
+	val, err := strconv.ParseInt(value, 10, bitSize)
+	if err != nil {
+		return err
+	}
+	field.SetInt(val)
 	return nil
 }

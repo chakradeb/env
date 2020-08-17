@@ -10,12 +10,20 @@ import (
 
 func TestEnvParser(t *testing.T) {
 	_ = os.Setenv("PORT", "5000")
-	_ = os.Setenv("Name", "envParser")
+	_ = os.Setenv("NAME", "envParser")
+	_ = os.Setenv("ID", "14")
+	_ = os.Setenv("ROW", "2")
+	_ = os.Setenv("TOTAL", "87")
+	_ = os.Setenv("REFERENCE", "6152")
 	defer os.Clearenv()
 
 	type args struct {
 		Port int `env:"PORT"`
-		Name string `env:"Name"`
+		Name string `env:"NAME"`
+		ID int8 `env:"ID"`
+		Row int16 `env:"ROW"`
+		Total int32 `env:"TOTAL"`
+		Ref int64 `env:"REFERENCE"`
 	}
 	config := args{}
 	err := Parse(&config)
@@ -23,6 +31,10 @@ func TestEnvParser(t *testing.T) {
 	assert.NoError(t, err, "unexpected error while parsing")
 	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
 	assert.Equal(t, config.Name, "envParser", "expectation mismatch for name")
+	assert.Equal(t, config.ID, int8(14), "expectation mismatch for id")
+	assert.Equal(t, config.Row, int16(2), "expectation mismatch for row")
+	assert.Equal(t, config.Total, int32(87), "expectation mismatch for total")
+	assert.Equal(t, config.Ref, int64(6152), "expectation mismatch for reference")
 }
 
 func TestEnvParserWithoutPointer(t *testing.T) {
@@ -50,17 +62,17 @@ func TestEnvParserWithNonStructValue(t *testing.T) {
 }
 
 func TestEnvParserWithUnsupportedTypes(t *testing.T) {
-	_ = os.Setenv("PORT", "5000")
+	_ = os.Setenv("PORT", "50.00")
 	defer os.Clearenv()
 
 	type args struct {
-		Port int16 `env:"PORT"`
+		Port float32 `env:"PORT"`
 	}
 	config := args{}
 	err := Parse(&config)
 
 	assert.Error(t, err, "unexpected error while parsing")
-	assert.Equal(t, err, errors.New("env: int16 is not a supported type"), "wrong error message")
+	assert.Equal(t, err, errors.New("env: float32 is not a supported type"), "wrong error message")
 }
 
 func TestEnvParserWithWrongValues(t *testing.T) {
