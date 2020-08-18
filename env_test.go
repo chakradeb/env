@@ -31,8 +31,8 @@ func TestEnvParser(t *testing.T) {
 		Pct float64 `env:"PERCENT"`
 		IsDefault bool `env:"IS_DEFAULT"`
 	}
-	config := args{}
-	errs := Parse(&config)
+	config := &args{}
+	errs := Parse(config)
 
 	assert.Equal(t, len(errs), 0, "unexpected error while parsing")
 	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
@@ -77,8 +77,8 @@ func TestEnvParserWithUnsupportedTypes(t *testing.T) {
 	type args struct {
 		IsDefault uint `env:"DEFAULT"`
 	}
-	config := args{}
-	errs := Parse(&config)
+	config := &args{}
+	errs := Parse(config)
 
 	assert.Equal(t, len(errs), 1, "unexpected error while parsing")
 	assert.Equal(t, errs[0], errors.New("env: uint is not a supported type"), "wrong error message")
@@ -95,8 +95,8 @@ func TestEnvParserWithWrongValues(t *testing.T) {
 		Avg float64 `env:"AVERAGE"`
 		IsDefault bool `env:"IS_DEFAULT"`
 	}
-	config := args{}
-	errs := Parse(&config)
+	config := &args{}
+	errs := Parse(config)
 
 	assert.Equal(t, len(errs), 3, "unexpected error while parsing")
 	assert.Equal(t, errs[0], errors.New("env: strconv.ParseInt: parsing \"5a\": invalid syntax"), "wrong error message")
@@ -119,8 +119,8 @@ func TestEnvParserWithoutEnvironmentVariable(t *testing.T) {
 		Pct float64 `env:"PERCENT"`
 		IsDefault bool `env:"IS_DEFAULT"`
 	}
-	config := args{}
-	errs := Parse(&config)
+	config := &args{}
+	errs := Parse(config)
 
 	assert.Equal(t, len(errs), 0,"unexpected error while parsing")
 	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
@@ -145,13 +145,29 @@ func TestEnvParserWithDefaultValueProvided(t *testing.T) {
 		Avg int `env:"AVERAGE"`
 		Place string `env:"PLACE" default:"Bangalore"`
 	}
-	config := args{}
-	errs := Parse(&config)
+	config := &args{}
+	errs := Parse(config)
 
 	assert.Equal(t, len(errs), 0,"unexpected error while parsing")
 	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
 	assert.Equal(t, config.Name, "", "expectation mismatch for name")
 	assert.Equal(t, config.ID, 14, "expectation mismatch for id")
 	assert.Equal(t, config.Avg, 0, "expectation mismatch for average")
+	assert.Equal(t, config.Place, "Bangalore", "expectation mismatch for place")
+}
+
+func TestEnvParserWithBothDefaultValueAndEnvironmentVariable(t *testing.T) {
+	_ = os.Setenv("ID", "14")
+	defer os.Clearenv()
+
+	type args struct {
+		ID int `env:"ID" default:"07"`
+		Place string `env:"PLACE" default:"Bangalore"`
+	}
+	config := &args{}
+	errs := Parse(config)
+
+	assert.Equal(t, len(errs), 0,"unexpected error while parsing")
+	assert.Equal(t, config.ID, 14, "expectation mismatch for id")
 	assert.Equal(t, config.Place, "Bangalore", "expectation mismatch for place")
 }
