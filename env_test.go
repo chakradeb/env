@@ -15,6 +15,8 @@ func TestEnvParser(t *testing.T) {
 	_ = os.Setenv("ROW", "2")
 	_ = os.Setenv("TOTAL", "87")
 	_ = os.Setenv("REFERENCE", "6152")
+	_ = os.Setenv("AVERAGE", "61.45")
+	_ = os.Setenv("PERCENT", "86.74")
 	defer os.Clearenv()
 
 	type args struct {
@@ -24,6 +26,8 @@ func TestEnvParser(t *testing.T) {
 		Row int16 `env:"ROW"`
 		Total int32 `env:"TOTAL"`
 		Ref int64 `env:"REFERENCE"`
+		Avg float32 `env:"AVERAGE"`
+		Pct float64 `env:"PERCENT"`
 	}
 	config := args{}
 	err := Parse(&config)
@@ -35,6 +39,8 @@ func TestEnvParser(t *testing.T) {
 	assert.Equal(t, config.Row, int16(2), "expectation mismatch for row")
 	assert.Equal(t, config.Total, int32(87), "expectation mismatch for total")
 	assert.Equal(t, config.Ref, int64(6152), "expectation mismatch for reference")
+	assert.Equal(t, config.Avg, float32(61.45), "expectation mismatch for average")
+	assert.Equal(t, config.Pct, 86.74, "expectation mismatch for percent")
 }
 
 func TestEnvParserWithoutPointer(t *testing.T) {
@@ -62,17 +68,17 @@ func TestEnvParserWithNonStructValue(t *testing.T) {
 }
 
 func TestEnvParserWithUnsupportedTypes(t *testing.T) {
-	_ = os.Setenv("PORT", "50.00")
+	_ = os.Setenv("IS_DEFAULT", "false")
 	defer os.Clearenv()
 
 	type args struct {
-		Port float32 `env:"PORT"`
+		IsDefault bool `env:"IS_DEFAULT"`
 	}
 	config := args{}
 	err := Parse(&config)
 
 	assert.Error(t, err, "unexpected error while parsing")
-	assert.Equal(t, err, errors.New("env: float32 is not a supported type"), "wrong error message")
+	assert.Equal(t, err, errors.New("env: bool is not a supported type"), "wrong error message")
 }
 
 func TestEnvParserWithWrongValues(t *testing.T) {

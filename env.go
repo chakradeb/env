@@ -45,6 +45,10 @@ func setValue(field reflect.Value, value string) error {
 			return setInt(field, value, 32)
 		case reflect.Int64:
 			return setInt(field, value, 64)
+		case reflect.Float32:
+			return setFloat(field, value, 32)
+		case reflect.Float64:
+			return setFloat(field, value, 64)
 		default:
 			return fmt.Errorf("%s is not a supported type", kind)
 	}
@@ -57,5 +61,14 @@ func setInt(field reflect.Value, value string, bitSize int) error {
 		return err
 	}
 	field.SetInt(val)
+	return nil
+}
+
+func setFloat(field reflect.Value, value string, bitSize int) error {
+	val, err := strconv.ParseFloat(value, bitSize)
+	if err != nil {
+		return err
+	}
+	field.SetFloat(val)
 	return nil
 }
