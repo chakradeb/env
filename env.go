@@ -23,6 +23,9 @@ func Parse(v interface{}) []error {
 		tag := rType.Field(i).Tag
 		val, ok := os.LookupEnv(tag.Get("env"))
 		if !ok {
+			val = tag.Get("default")
+		}
+		if val == "" {
 			continue
 		}
 		err := setValue(elem.Field(i), val)

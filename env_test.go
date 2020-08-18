@@ -111,6 +111,13 @@ func TestEnvParserWithoutEnvironmentVariable(t *testing.T) {
 	type args struct {
 		Port int `env:"PORT"`
 		Name string `env:"Name"`
+		ID int8 `env:"ID"`
+		Row int16 `env:"ROW"`
+		Total int32 `env:"TOTAL"`
+		Ref int64 `env:"REFERENCE"`
+		Avg float32 `env:"AVERAGE"`
+		Pct float64 `env:"PERCENT"`
+		IsDefault bool `env:"IS_DEFAULT"`
 	}
 	config := args{}
 	errs := Parse(&config)
@@ -118,4 +125,33 @@ func TestEnvParserWithoutEnvironmentVariable(t *testing.T) {
 	assert.Equal(t, len(errs), 0,"unexpected error while parsing")
 	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
 	assert.Equal(t, config.Name, "", "expectation mismatch for name")
+	assert.Equal(t, config.ID, int8(0), "expectation mismatch for id")
+	assert.Equal(t, config.Row, int16(0), "expectation mismatch for row")
+	assert.Equal(t, config.Total, int32(0), "expectation mismatch for total")
+	assert.Equal(t, config.Ref, int64(0), "expectation mismatch for reference")
+	assert.Equal(t, config.Avg, float32(0), "expectation mismatch for average")
+	assert.Equal(t, config.Pct, float64(0), "expectation mismatch for percent")
+	assert.Equal(t, config.IsDefault, false, "expectation mismatch for is default")
+}
+
+func TestEnvParserWithDefaultValueProvided(t *testing.T) {
+	_ = os.Setenv("ID", "14")
+	defer os.Clearenv()
+
+	type args struct {
+		Port int `env:"PORT" default:"5000"`
+		Name string `env:"Name"`
+		ID int `env:"ID"`
+		Avg int `env:"AVERAGE"`
+		Place string `env:"PLACE" default:"Bangalore"`
+	}
+	config := args{}
+	errs := Parse(&config)
+
+	assert.Equal(t, len(errs), 0,"unexpected error while parsing")
+	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
+	assert.Equal(t, config.Name, "", "expectation mismatch for name")
+	assert.Equal(t, config.ID, 14, "expectation mismatch for id")
+	assert.Equal(t, config.Avg, 0, "expectation mismatch for average")
+	assert.Equal(t, config.Place, "Bangalore", "expectation mismatch for place")
 }
