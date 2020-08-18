@@ -30,9 +30,9 @@ func TestEnvParser(t *testing.T) {
 		Pct float64 `env:"PERCENT"`
 	}
 	config := args{}
-	err := Parse(&config)
+	errs := Parse(&config)
 
-	assert.NoError(t, err, "unexpected error while parsing")
+	assert.Equal(t, len(errs), 0, "unexpected error while parsing")
 	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
 	assert.Equal(t, config.Name, "envParser", "expectation mismatch for name")
 	assert.Equal(t, config.ID, int8(14), "expectation mismatch for id")
@@ -53,46 +53,50 @@ func TestEnvParserWithoutPointer(t *testing.T) {
 		Name string `env:"Name"`
 	}
 	config := args{}
-	err := Parse(config)
+	errs := Parse(config)
 
-	assert.Error(t, err, "unexpected error while parsing")
-	assert.Equal(t, err, errors.New("env: expected ptr but got struct"), "wrong error message")
+	assert.Equal(t, len(errs), 1,"unexpected error while parsing")
+	assert.Equal(t, errs[0], errors.New("env: expected ptr but got struct"), "wrong error message")
 }
 
 func TestEnvParserWithNonStructValue(t *testing.T) {
 	config := "abcd"
-	err := Parse(&config)
+	errs := Parse(&config)
 
-	assert.Error(t, err, "unexpected error while parsing")
-	assert.Equal(t, err, errors.New("env: expected struct but got string"), "wrong error message")
+	assert.Equal(t, len(errs), 1,"unexpected error while parsing")
+	assert.Equal(t, errs[0], errors.New("env: expected struct but got string"), "wrong error message")
 }
 
 func TestEnvParserWithUnsupportedTypes(t *testing.T) {
-	_ = os.Setenv("IS_DEFAULT", "false")
+	_ = os.Setenv("DEFAULT", "321")
 	defer os.Clearenv()
 
 	type args struct {
-		IsDefault bool `env:"IS_DEFAULT"`
+		IsDefault uint `env:"DEFAULT"`
 	}
 	config := args{}
-	err := Parse(&config)
+	errs := Parse(&config)
 
-	assert.Error(t, err, "unexpected error while parsing")
-	assert.Equal(t, err, errors.New("env: bool is not a supported type"), "wrong error message")
+	assert.Equal(t, len(errs), 1, "unexpected error while parsing")
+	assert.Equal(t, errs[0], errors.New("env: uint is not a supported type"), "wrong error message")
 }
 
 func TestEnvParserWithWrongValues(t *testing.T) {
 	_ = os.Setenv("PORT", "5a")
+	_ = os.Setenv("AVERAGE", "5a.23")
 	defer os.Clearenv()
 
 	type args struct {
 		Port int `env:"PORT"`
+		Avg float64 `env:"AVERAGE"`
+		IsDefault bool `env:"IS_DEFAULT"`
 	}
 	config := args{}
-	err := Parse(&config)
+	errs := Parse(&config)
 
-	assert.Error(t, err, "unexpected error while parsing")
-	assert.Equal(t, err, errors.New("env: strconv.ParseInt: parsing \"5a\": invalid syntax"), "wrong error message")
+	assert.Equal(t, len(errs), 2, "unexpected error while parsing")
+	assert.Equal(t, errs[0], errors.New("env: strconv.ParseInt: parsing \"5a\": invalid syntax"), "wrong error message")
+	assert.Equal(t, errs[1], errors.New("env: strconv.ParseFloat: parsing \"5a.23\": invalid syntax"), "wrong error message")
 }
 
 func TestEnvParserWithoutEnvironmentVariable(t *testing.T) {
@@ -104,9 +108,9 @@ func TestEnvParserWithoutEnvironmentVariable(t *testing.T) {
 		Name string `env:"Name"`
 	}
 	config := args{}
-	err := Parse(&config)
+	errs := Parse(&config)
 
-	assert.NoError(t, err, "unexpected error while parsing")
+	assert.Equal(t, len(errs), 0,"unexpected error while parsing")
 	assert.Equal(t, config.Port, 5000, "expectation mismatch for port")
 	assert.Equal(t, config.Name, "", "expectation mismatch for name")
 }

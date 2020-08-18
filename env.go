@@ -7,15 +7,17 @@ import (
 	"strconv"
 )
 
-func Parse(v interface{}) error {
+func Parse(v interface{}) []error {
+	var errs []error
+
 	r := reflect.ValueOf(v)
 	if kind := r.Kind(); kind != reflect.Ptr {
-		return fmt.Errorf("env: expected %s but got %s", reflect.Ptr, kind)
+		return []error{fmt.Errorf("env: expected %s but got %s", reflect.Ptr, kind)}
 	}
 	elem := r.Elem()
 	rType := elem.Type()
 	if kind := rType.Kind(); kind != reflect.Struct {
-		return fmt.Errorf("env: expected %s but got %s", reflect.Struct, kind)
+		return []error{fmt.Errorf("env: expected %s but got %s", reflect.Struct, kind)}
 	}
 	for i := 0; i < rType.NumField(); i++ {
 		tag := rType.Field(i).Tag
@@ -25,10 +27,10 @@ func Parse(v interface{}) error {
 		}
 		err := setValue(elem.Field(i), val)
 		if err != nil {
-			return fmt.Errorf("env: %s", err.Error())
+			errs = append(errs, fmt.Errorf("env: %s", err.Error()))
 		}
 	}
-	return nil
+	return errs
 }
 
 func setValue(field reflect.Value, value string) error {
