@@ -17,6 +17,7 @@ func TestEnvParser(t *testing.T) {
 	_ = os.Setenv("REFERENCE", "6152")
 	_ = os.Setenv("AVERAGE", "61.45")
 	_ = os.Setenv("PERCENT", "86.74")
+	_ = os.Setenv("IS_DEFAULT", "false")
 	defer os.Clearenv()
 
 	type args struct {
@@ -28,6 +29,7 @@ func TestEnvParser(t *testing.T) {
 		Ref int64 `env:"REFERENCE"`
 		Avg float32 `env:"AVERAGE"`
 		Pct float64 `env:"PERCENT"`
+		IsDefault bool `env:"IS_DEFAULT"`
 	}
 	config := args{}
 	errs := Parse(&config)
@@ -41,6 +43,7 @@ func TestEnvParser(t *testing.T) {
 	assert.Equal(t, config.Ref, int64(6152), "expectation mismatch for reference")
 	assert.Equal(t, config.Avg, float32(61.45), "expectation mismatch for average")
 	assert.Equal(t, config.Pct, 86.74, "expectation mismatch for percent")
+	assert.Equal(t, config.IsDefault, false, "expectation mismatch for is_default")
 }
 
 func TestEnvParserWithoutPointer(t *testing.T) {
@@ -84,6 +87,7 @@ func TestEnvParserWithUnsupportedTypes(t *testing.T) {
 func TestEnvParserWithWrongValues(t *testing.T) {
 	_ = os.Setenv("PORT", "5a")
 	_ = os.Setenv("AVERAGE", "5a.23")
+	_ = os.Setenv("IS_DEFAULT", "not false")
 	defer os.Clearenv()
 
 	type args struct {
@@ -94,9 +98,10 @@ func TestEnvParserWithWrongValues(t *testing.T) {
 	config := args{}
 	errs := Parse(&config)
 
-	assert.Equal(t, len(errs), 2, "unexpected error while parsing")
+	assert.Equal(t, len(errs), 3, "unexpected error while parsing")
 	assert.Equal(t, errs[0], errors.New("env: strconv.ParseInt: parsing \"5a\": invalid syntax"), "wrong error message")
 	assert.Equal(t, errs[1], errors.New("env: strconv.ParseFloat: parsing \"5a.23\": invalid syntax"), "wrong error message")
+	assert.Equal(t, errs[2], errors.New("env: strconv.ParseBool: parsing \"not false\": invalid syntax"), "wrong error message")
 }
 
 func TestEnvParserWithoutEnvironmentVariable(t *testing.T) {

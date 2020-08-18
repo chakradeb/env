@@ -51,6 +51,12 @@ func setValue(field reflect.Value, value string) error {
 			return setFloat(field, value, 32)
 		case reflect.Float64:
 			return setFloat(field, value, 64)
+		case reflect.Bool:
+			val, err := strconv.ParseBool(value)
+			if err != nil {
+				return err
+			}
+			field.SetBool(val)
 		default:
 			return fmt.Errorf("%s is not a supported type", kind)
 	}
